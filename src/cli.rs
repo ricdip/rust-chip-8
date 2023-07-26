@@ -1,5 +1,5 @@
+use clap::{Args, Parser};
 use std::path::PathBuf;
-use clap::{Parser, Args};
 
 const ARG_ROM_HELP: &str = "Path to CHIP-8 ROM file to run";
 const ARG_ROM_VALUE_NAME: &str = "FILE";
@@ -13,7 +13,7 @@ pub struct Cli {
     pub rom: PathBuf,
 
     #[command(flatten)]
-    pub log: Log
+    pub log: Log,
 }
 
 #[derive(Args, Debug)]
@@ -42,6 +42,6 @@ impl Cli {
     }
 
     pub fn parse_opts() -> Self {
-      Self::parse()
+        Self::parse()
     }
 }
