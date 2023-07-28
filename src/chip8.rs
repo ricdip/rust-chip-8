@@ -205,6 +205,26 @@ impl Chip8 {
         // set ROM loaded in memory flag
         self.rom_loaded = true;
     }
+
+    /// Returns the current contents of CHIP-8 RAM memory
+    pub fn dump_memory(&self) -> [u8; MAX_MEMORY_SIZE] {
+        self.memory
+    }
+
+    /// Returns a String that represents the current contents of the CHIP-8 screen.
+    /// A CHIP-8 pixel can be white or black, so we have 1 if the pixel is white, 0 otherwise
+    pub fn dump_display(&self) -> String {
+        // string representation of display
+        let mut display_str = String::from("");
+        for i in 0..MAX_DISPLAY_SIZE {
+            // if i reaches the display width, new line
+            if i % DISPLAY_WIDTH == 0 {
+                display_str += "\n";
+            }
+            display_str += &format!("{}", if self.display[i] { 1 } else { 0 });
+        }
+        display_str
+    }
 }
 
 // Display trait implementation for Chip8
