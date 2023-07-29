@@ -2,6 +2,8 @@
 
 use std::{fmt::Display, fs::File, io::Read, path::PathBuf};
 
+use tracing::trace;
+
 /// max RAM memory
 const MAX_MEMORY_SIZE: usize = 4096;
 /// display width
@@ -64,6 +66,9 @@ pub struct Chip8 {
     /// We can implement this with an array of booleans that holds the pixel state (1 or 0)
     display: [bool; MAX_DISPLAY_SIZE],
 
+    /// CHIP-8 draw flag. If flag is set to true, redraw screen
+    draw: bool,
+
     /// CHIP-8 has a stack used to remember the current location
     /// before a jump is performed.
     /// (CHIP-8 instruction set has opcodes that allow the
@@ -95,6 +100,8 @@ struct Timers {
 impl Chip8 {
     /// Resets CHIP-8 instance
     pub fn reset(&mut self) {
+        trace!("Chip8::reset: start");
+
         // clear rom_loaded flag
         self.rom_loaded = false;
 
@@ -122,6 +129,9 @@ impl Chip8 {
             self.display[i] = false;
         }
 
+        // reset draw flag
+        self.draw = false;
+
         // clear stack
         for i in 0..MAX_STACK_SIZE {
             self.stack[i] = 0;
@@ -136,18 +146,26 @@ impl Chip8 {
         // reset timers
         self.timers.delay_timer = 0;
         self.timers.sound_timer = 0;
+
+        trace!("Chip8::reset: exit");
     }
 
     /// Loads CHIP-8 fontset into memory at locations 0x00-0x50
     fn load_fontset(&mut self) {
+        trace!("Chip8::load_fontset: start");
+
         // load fontset into memory (0x00-0x50)
         for i in 0x00..0x50 {
             self.memory[i] = CHIP8_FONTSET[i];
         }
+
+        trace!("Chip8::load_fontset: exit");
     }
 
     /// Returns a new CHIP-8 instance ready to load a new ROM file
     pub fn new() -> Self {
+        trace!("Chip8::new: start");
+
         // create new chip8 instance
         let mut chip8 = Self {
             rom_loaded: false,
@@ -157,6 +175,7 @@ impl Chip8 {
             i: 0,
             pc: 0x200,
             display: [false; MAX_DISPLAY_SIZE],
+            draw: false,
             stack: [0; MAX_STACK_SIZE],
             sp: 0,
             timers: Timers {
@@ -166,6 +185,9 @@ impl Chip8 {
         };
         // load fontset
         chip8.load_fontset();
+
+        trace!("Chip8::new: exit");
+
         // return created instance
         chip8
     }
@@ -180,6 +202,8 @@ impl Chip8 {
     ///
     /// The function panics in case of errors during opening and reading of the ROM file
     pub fn load_rom(&mut self, file: PathBuf) {
+        trace!("Chip8::load_rom: start");
+
         // opening file
         let mut rom = match File::open(file.as_path()) {
             Ok(f) => f,
@@ -204,16 +228,23 @@ impl Chip8 {
 
         // set ROM loaded in memory flag
         self.rom_loaded = true;
+
+        trace!("Chip8::load_rom: exit");
     }
 
     /// Returns the current contents of CHIP-8 RAM memory
     pub fn dump_memory(&self) -> [u8; MAX_MEMORY_SIZE] {
+        trace!("Chip8::dump_memory: start");
+        trace!("Chip8::dump_memory: exit");
+
         self.memory
     }
 
     /// Returns a String that represents the current contents of the CHIP-8 screen.
     /// A CHIP-8 pixel can be white or black, so we have 1 if the pixel is white, 0 otherwise
     pub fn dump_display(&self) -> String {
+        trace!("Chip8::dump_display: start");
+
         // string representation of display
         let mut display_str = String::from("");
         for i in 0..MAX_DISPLAY_SIZE {
@@ -223,7 +254,57 @@ impl Chip8 {
             }
             display_str += &format!("{}", if self.display[i] { 1 } else { 0 });
         }
+
+        trace!("Chip8::dump_display: exit");
+
         display_str
+    }
+
+    pub fn emulate_cycle(&mut self) {
+        trace!("Chip8::emulate_cycle: start");
+
+        // fetch the first byte of the opcode
+        let first_byte_opcode = self.memory[usize::from(self.pc)];
+        // fetch the second byte of the opcode
+        let second_byte_opcode = self.memory[usize::from(self.pc + 1)];
+        // combine opcode bytes
+        self.opcode = u16::from(first_byte_opcode) << 8 | u16::from(second_byte_opcode);
+
+        // increment PC
+        self.pc += 2;
+
+        // CHIP-8 instructions are divided into broad categories by the first nibble (half-byte)
+        // so, the first nibble tells us what kind of instruction it is
+        let op = self.opcode & 0xF000;
+        // second nibble: used to loop up one of the 16 registers (VX) from V0-VF
+        let x = self.opcode & 0x0F00;
+        // third nibble: used to loop up one of the 16 registers (VY) from V0-VF
+        let y = self.opcode & 0x00F0;
+        // fourth nibble: 4-bit number
+        let n = self.opcode & 0x000F;
+        // second byte (third and fourth nibble). An 8-bit immediate number
+        let nn = self.opcode & 0x00FF;
+        // second, third and fourth nibble. A 12-bit immediate number
+        let nnn = self.opcode & 0x0FFF;
+
+        match op {
+            0x0000 => {
+                match self.opcode & nnn {
+                    // clear screen
+                    0x00E0 => {
+                        for i in 0..MAX_DISPLAY_SIZE {
+                            self.display[i] = false;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            _ => {
+                panic!("Illegal opcode: `{}`", self.opcode);
+            }
+        }
+
+        trace!("Chip8::emulate_cycle: exit");
     }
 }
 

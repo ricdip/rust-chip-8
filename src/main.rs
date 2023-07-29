@@ -10,7 +10,7 @@ use crate::cli::Cli;
 use chip8::Chip8;
 use lazy_static::lazy_static;
 use std::panic;
-use tracing::{error, info};
+use tracing::{debug, error, info, trace};
 
 // static that contains CLI args
 lazy_static! {
@@ -23,9 +23,12 @@ fn main() {
     // initialize console
     console::init();
 
+    trace!("main thread: executing...");
+
     // panics will use tracing::error for printing panic info
     // and will exit with code 1
     panic::set_hook(Box::new(|panic_info| {
+        trace!("panic::set_hook: start");
         error!("{}", panic_info.to_string());
         std::process::exit(1);
     }));
@@ -33,8 +36,10 @@ fn main() {
     // validate args
     ARGS.validate();
 
-    // loop
-    let chip8 = Chip8::new();
+    debug!("args: {:?}", *ARGS);
 
-    info!("{}", chip8);
+    // loop
+    let _ = Chip8::new();
+
+    trace!("main thread: exit");
 }
