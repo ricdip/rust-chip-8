@@ -101,6 +101,7 @@ impl Chip8 {
     /// Resets CHIP-8 instance
     pub fn reset(&mut self) {
         trace!("Chip8::reset: start");
+        trace!("before reset: {}", self);
 
         // clear rom_loaded flag
         self.rom_loaded = false;
@@ -147,6 +148,7 @@ impl Chip8 {
         self.timers.delay_timer = 0;
         self.timers.sound_timer = 0;
 
+        trace!("after reset: {}", self);
         trace!("Chip8::reset: exit");
     }
 
@@ -186,6 +188,7 @@ impl Chip8 {
         // load fontset
         chip8.load_fontset();
 
+        trace!("{}", chip8);
         trace!("Chip8::new: exit");
 
         // return created instance
@@ -260,58 +263,9 @@ impl Chip8 {
         display_str
     }
 
-    pub fn emulate_cycle(&mut self) {
-        trace!("Chip8::emulate_cycle: start");
+    fn dump_v(&self) -> String {
+        trace!("Chip8::dump_v: start");
 
-        // fetch the first byte of the opcode
-        let first_byte_opcode = self.memory[usize::from(self.pc)];
-        // fetch the second byte of the opcode
-        let second_byte_opcode = self.memory[usize::from(self.pc + 1)];
-        // combine opcode bytes
-        self.opcode = u16::from(first_byte_opcode) << 8 | u16::from(second_byte_opcode);
-
-        // increment PC
-        self.pc += 2;
-
-        // CHIP-8 instructions are divided into broad categories by the first nibble (half-byte)
-        // so, the first nibble tells us what kind of instruction it is
-        let op = self.opcode & 0xF000;
-        // second nibble: used to loop up one of the 16 registers (VX) from V0-VF
-        let x = self.opcode & 0x0F00;
-        // third nibble: used to loop up one of the 16 registers (VY) from V0-VF
-        let y = self.opcode & 0x00F0;
-        // fourth nibble: 4-bit number
-        let n = self.opcode & 0x000F;
-        // second byte (third and fourth nibble). An 8-bit immediate number
-        let nn = self.opcode & 0x00FF;
-        // second, third and fourth nibble. A 12-bit immediate number
-        let nnn = self.opcode & 0x0FFF;
-
-        match op {
-            0x0000 => {
-                match self.opcode & nnn {
-                    // clear screen
-                    0x00E0 => {
-                        for i in 0..MAX_DISPLAY_SIZE {
-                            self.display[i] = false;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            _ => {
-                panic!("Illegal opcode: `{}`", self.opcode);
-            }
-        }
-
-        trace!("Chip8::emulate_cycle: exit");
-    }
-}
-
-// Display trait implementation for Chip8
-impl Display for Chip8 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // string representation of v
         let mut v_str = String::from("[");
         for i in 0..V_SIZE {
             if i == (V_SIZE - 1) {
@@ -321,7 +275,14 @@ impl Display for Chip8 {
             }
         }
 
-        // string representation of stack
+        trace!("Chip8::dump_v: exit");
+
+        v_str
+    }
+
+    fn dump_stack(&self) -> String {
+        trace!("Chip8::dump_stack: start");
+
         let mut stack_str = String::from("[");
         for i in 0..MAX_STACK_SIZE {
             if i == (MAX_STACK_SIZE - 1) {
@@ -331,7 +292,90 @@ impl Display for Chip8 {
             }
         }
 
+        trace!("Chip8::dump_stack: exit");
+
+        stack_str
+    }
+
+    pub fn emulate_cycle(&mut self) {
+        trace!("Chip8::emulate_cycle: start");
+
+        trace!("before fetching: {}", self);
+
+        // fetch the first byte of the opcode
+        let first_byte_opcode = self.memory[usize::from(self.pc)];
+        trace!("opcode first byte fetch: {:#X}", first_byte_opcode);
+        // fetch the second byte of the opcode
+        let second_byte_opcode = self.memory[usize::from(self.pc + 1)];
+        trace!("opcode second byte fetch: {:#X}", second_byte_opcode);
+        // combine opcode bytes
+        self.opcode = u16::from(first_byte_opcode) << 8 | u16::from(second_byte_opcode);
+        trace!("opcode: {:#X}", self.opcode);
+
+        // increment PC
+        self.pc += 2;
+
+        // CHIP-8 instructions are divided into broad categories by the first nibble (half-byte)
+        // so, the first nibble tells us what kind of instruction it is
+        let op = self.opcode & 0xF000;
+        trace!("first nibble (op): {:#X}", op);
+
+        // second nibble: used to loop up one of the 16 registers (VX) from V0-VF
+        let x = self.opcode & 0x0F00;
+        trace!("second nibble (x): {:#X}", x);
+
+        // third nibble: used to loop up one of the 16 registers (VY) from V0-VF
+        let y = self.opcode & 0x00F0;
+        trace!("third nibble (y): {:#X}", y);
+
+        // fourth nibble: 4-bit number
+        let n = self.opcode & 0x000F;
+        trace!("fourth nibble (n): {:#X}", n);
+
+        // second byte (third and fourth nibble). An 8-bit immediate number
+        let nn = self.opcode & 0x00FF;
+        trace!("third and fourth nibble (nn): {:#X}", nn);
+
+        // second, third and fourth nibble. A 12-bit immediate number
+        let nnn = self.opcode & 0x0FFF;
+        trace!("second, third and fourth nibble (nnn): {:#X}", nnn);
+
+        match op {
+            0x0000 => {
+                match self.opcode & nnn {
+                    // clear screen
+                    0x00E0 => {
+                        trace!("execute: clear screen");
+                        for i in 0..MAX_DISPLAY_SIZE {
+                            self.display[i] = false;
+                        }
+                    }
+                    _ => {
+                        panic!("Illegal category `{}` opcode: `{}`", op, self.opcode);
+                    }
+                }
+            }
+            _ => {
+                panic!("Illegal opcode: `{}`", self.opcode);
+            }
+        }
+
+        trace!("after executing: {}", self);
+
+        trace!("Chip8::emulate_cycle: exit");
+    }
+}
+
+// Display trait implementation for Chip8
+impl Display for Chip8 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // string representation of v
+        let v_str = self.dump_v();
+
+        // string representation of stack
+        let stack_str = self.dump_stack();
+
         // chip8 string representation: avoided memory and display for excessive length
-        write!(f, "Chip8 {{ rom_loaded: {}, current_opcode: {:#X}, memory: [...], V: {}, I: {:#X}, PC: {:#X}, display: [...], stack: {}, SP: {:#X}, timers.delay_timer: {:#X}, timers.sound_timer: {:#X} }}", self.rom_loaded, self.opcode, v_str, self.i, self.pc, stack_str, self.sp, self.timers.delay_timer, self.timers.sound_timer)
+        write!(f, "Chip8 {{ rom_loaded: {}, current_opcode: {:#X}, memory: [...], V: {}, I: {:#X}, PC: {:#X}, display: [...], draw: {}, stack: {}, SP: {:#X}, timers.delay_timer: {:#X}, timers.sound_timer: {:#X} }}", self.rom_loaded, self.opcode, v_str, self.i, self.pc, self.draw, stack_str, self.sp, self.timers.delay_timer, self.timers.sound_timer)
     }
 }
