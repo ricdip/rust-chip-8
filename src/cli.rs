@@ -4,14 +4,17 @@ use clap::{Args, Parser};
 use std::path::PathBuf;
 use tracing::trace;
 
-/// cli -r command help
-const ARG_ROM_HELP: &str = "Path to CHIP-8 ROM file to run";
+/// cli -f command help
+const ARG_ROM_FILE_HELP: &str = "Path to CHIP-8 ROM file to run";
 
-/// cli -r command value
-const ARG_ROM_VALUE_NAME: &str = "FILE";
+/// cli -f command value
+const ARG_ROM_FILE_VALUE_NAME: &str = "FILE";
 
 /// cli -s command help
 const ARG_STEPPING_HELP: &str = "Enable one step at time execution";
+
+/// cli -r command help
+const ARG_RANDOM_SEED_HELP: &str = "Random seed";
 
 /// cli -q command help
 const ARG_QUIET_HELP: &str = "Enable quiet logging";
@@ -26,8 +29,8 @@ const ARG_TRACE_HELP: &str = "Enable trace logging";
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 pub struct Cli {
-    /// ROM file path arg
-    #[arg(short, long, required(true), value_name=ARG_ROM_VALUE_NAME, help=ARG_ROM_HELP)]
+    /// ROM file path
+    #[arg(short = 'f', long = "rom-file", required(true), help=ARG_ROM_FILE_HELP, value_name=ARG_ROM_FILE_VALUE_NAME)]
     pub rom: PathBuf,
 
     /// Logging levels flags
@@ -37,6 +40,10 @@ pub struct Cli {
     /// Stepping execution flag
     #[arg(short, long, help=ARG_STEPPING_HELP)]
     pub stepping: bool,
+
+    /// Random seed
+    #[arg(short, long, help=ARG_RANDOM_SEED_HELP, default_value_t = 10)]
+    pub random_seed: u64,
 }
 
 /// Log group arguments structure

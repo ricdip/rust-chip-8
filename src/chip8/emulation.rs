@@ -1,13 +1,22 @@
 //! Implementation of CHIP-8 (one cycle emulation)
 
 use super::{Chip8, MAX_DISPLAY_SIZE};
+use rand::Rng;
 use tracing::{debug, trace};
 
 impl Chip8 {
     /// Function that emulates one CHIP-8 cycle (one opcode execution):
     /// - fetch, decode, execute opcode
     /// - update timers
-    pub(super) fn emulate_cycle(&mut self) {
+    ///
+    /// # Arguments
+    ///
+    /// * `rng` - Mutable reference to a struct that implements the Rng trait used to generate random numbers
+    ///
+    /// # Panics
+    ///
+    /// The function panics if the the current opcode is unknown
+    pub(super) fn emulate_cycle<R: Rng>(&mut self, rng: &mut R) {
         trace!("Chip8::emulate_cycle: start");
 
         debug!("before fetching: {}", self);
@@ -336,10 +345,33 @@ impl Chip8 {
             }
 
             // opcode with first nibble A
+            // set I = NNN
             0xA000 => {
-                debug!("execute: I = nnn");
+                debug!("execute: set I = nnn");
 
                 self.i = nnn;
+
+                self.pc += 2
+            }
+
+            // opcode with first nibble B
+            // WARN: ambiguous instruction - instruction changed with SUPER-CHIP-8
+            // jump with offset
+            // set PC = NNN + V0
+            0xB000 => {
+                debug!("execute: jump with offset: PC = NNN + V0");
+
+                self.pc = nnn + (self.v[0] as u16);
+            }
+
+            // opcode with first nibble C
+            // random: VX = rand & nn
+            0xC000 => {
+                debug!("execute: random: VX = rand & nn");
+
+                let rand = rng.gen::<u8>();
+
+                self.v[x as usize] = rand & nn;
 
                 self.pc += 2
             }

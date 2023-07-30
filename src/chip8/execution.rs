@@ -1,6 +1,7 @@
 //! Implementation of CHIP-8 (emulator execution)
 
 use super::Chip8;
+use rand::{rngs::StdRng, SeedableRng};
 use std::{
     io, thread,
     time::{Duration, Instant},
@@ -13,14 +14,18 @@ impl Chip8 {
     /// # Arguments
     ///
     /// * `stepping` - Boolean that enables stepping execution (one cycle at time)
+    /// * `seed` - Unsigned integer (u64) that is the seed for the random number generator
     ///
     /// # Panics
     ///
     /// The function panics if the ROM is not loaded or in case of illegal input during the stepping execution
-    pub fn run(&mut self, stepping: bool) {
+    pub fn run(&mut self, stepping: bool, seed: u64) {
         if !self.rom_loaded {
             panic!("ROM is not loaded");
         }
+
+        // init random number generator
+        let mut rng = StdRng::seed_from_u64(seed);
 
         let mut instant: Instant;
         // TODO: break from loop
@@ -32,7 +37,7 @@ impl Chip8 {
         let chip8_clock_time_seconds = 1.0 / 500.0;
         loop {
             instant = Instant::now();
-            self.emulate_cycle();
+            self.emulate_cycle(&mut rng);
             if self.draw {
                 // TODO: drawing function
                 info!("{}", self.dump_display());

@@ -44,7 +44,7 @@ fn main() {
     chip8.load_rom(&ARGS.rom);
 
     // start emulation
-    chip8.run(ARGS.stepping);
+    chip8.run(ARGS.stepping, ARGS.random_seed);
 
     trace!("main thread: exit");
 }
