@@ -6,8 +6,8 @@ mod chip8;
 mod cli;
 mod console;
 
+use crate::chip8::Chip8;
 use crate::cli::Cli;
-use chip8::Chip8;
 use lazy_static::lazy_static;
 use std::panic;
 use tracing::{debug, error, trace};
