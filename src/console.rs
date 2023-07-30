@@ -9,10 +9,14 @@ pub fn init() {
     let mut subscriber = tracing_subscriber::fmt();
 
     // set logging level from args
-    if ARGS.log.debug {
+    if ARGS.log.trace {
         // enable trace, debug, info, warn, error levels
         level = Level::TRACE;
         subscriber = subscriber.with_target(true).with_thread_ids(true);
+    } else if ARGS.log.debug {
+        // enable debug, info, warn, error levels
+        level = Level::DEBUG;
+        subscriber = subscriber.with_target(true);
     } else if ARGS.log.quiet {
         // enable warn, error levels
         level = Level::WARN;

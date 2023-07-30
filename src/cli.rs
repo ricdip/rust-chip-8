@@ -6,12 +6,21 @@ use tracing::trace;
 
 /// cli -r command help
 const ARG_ROM_HELP: &str = "Path to CHIP-8 ROM file to run";
+
 /// cli -r command value
 const ARG_ROM_VALUE_NAME: &str = "FILE";
+
+/// cli -s command help
+const ARG_STEPPING_HELP: &str = "Enable one step at time execution";
+
 /// cli -q command help
 const ARG_QUIET_HELP: &str = "Enable quiet logging";
+
 /// cli -d command help
-const ARG_DEBUG_HELP: &str = "Enable verbose logging";
+const ARG_DEBUG_HELP: &str = "Enable debug logging";
+
+/// cli -t command help
+const ARG_TRACE_HELP: &str = "Enable trace logging";
 
 /// CLI arguments structure
 #[derive(Parser, Debug)]
@@ -24,6 +33,10 @@ pub struct Cli {
     /// Logging levels flags
     #[command(flatten)]
     pub log: Log,
+
+    /// Stepping execution flag
+    #[arg(short, long, help=ARG_STEPPING_HELP)]
+    pub stepping: bool,
 }
 
 /// Log group arguments structure
@@ -37,6 +50,10 @@ pub struct Log {
     /// Debug logging flag
     #[arg(short, long, help=ARG_DEBUG_HELP)]
     pub debug: bool,
+
+    /// Trace logging flag
+    #[arg(short, long, help=ARG_TRACE_HELP)]
+    pub trace: bool,
 }
 
 impl Cli {

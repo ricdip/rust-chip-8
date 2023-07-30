@@ -10,7 +10,7 @@ use crate::cli::Cli;
 use chip8::Chip8;
 use lazy_static::lazy_static;
 use std::panic;
-use tracing::{debug, error, info, trace};
+use tracing::{debug, error, trace};
 
 // static that contains CLI args
 lazy_static! {
@@ -28,7 +28,6 @@ fn main() {
     // panics will use tracing::error for printing panic info
     // and will exit with code 1
     panic::set_hook(Box::new(|panic_info| {
-        trace!("panic::set_hook: start");
         error!("{}", panic_info.to_string());
         std::process::exit(1);
     }));
@@ -38,8 +37,14 @@ fn main() {
 
     debug!("args: {:?}", *ARGS);
 
-    // loop
-    let _ = Chip8::new();
+    // create CHIP-8 instance
+    let mut chip8 = Chip8::new();
+
+    // load ROM file
+    chip8.load_rom(&ARGS.rom);
+
+    // start emulation
+    chip8.run(ARGS.stepping);
 
     trace!("main thread: exit");
 }
