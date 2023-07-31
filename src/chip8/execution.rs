@@ -39,7 +39,8 @@ impl Chip8 {
             instant = Instant::now();
             self.emulate_cycle(&mut rng);
             if self.draw {
-                // TODO: drawing function
+                self.draw = false;
+                // TODO: drawing on screen without dump
                 info!("{}", self.dump_display());
             }
             let elapsed = instant.elapsed();

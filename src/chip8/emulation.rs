@@ -1,5 +1,7 @@
 //! Implementation of CHIP-8 (one cycle emulation)
 
+use crate::chip8::{DISPLAY_HEIGTH, DISPLAY_WIDTH};
+
 use super::{Chip8, MAX_DISPLAY_SIZE};
 use rand::Rng;
 use tracing::{debug, trace};
@@ -37,11 +39,11 @@ impl Chip8 {
         debug!("first nibble (op): {:#X}", op);
 
         // second nibble: used to loop up one of the 16 registers (VX) from V0-VF
-        let x = self.opcode & 0x0F00;
+        let x = (self.opcode & 0x0F00) >> 8;
         debug!("second nibble (x): {:#X}", x);
 
         // third nibble: used to loop up one of the 16 registers (VY) from V0-VF
-        let y = self.opcode & 0x00F0;
+        let y = (self.opcode & 0x00F0) >> 4;
         debug!("third nibble (y): {:#X}", y);
 
         // fourth nibble: 4-bit number
@@ -372,6 +374,65 @@ impl Chip8 {
                 let rand = rng.gen::<u8>();
 
                 self.v[x as usize] = rand & nn;
+
+                self.pc += 2
+            }
+
+            // opcode with first nibble D
+            // display
+            0xD000 => {
+                debug!("execute: display");
+                // VX
+                let x_coord = self.v[x as usize] % DISPLAY_WIDTH as u8;
+                // VY
+                let y_coord = self.v[y as usize] % DISPLAY_HEIGTH as u8;
+                // H (row)
+                let heigth = n;
+                // reset register VF
+                self.v[0xF] = 0;
+                // sprite row data
+                let mut sprite_row_data: u8;
+
+                // iterate over sprite rows (max n height)
+                for sprite_row in 0..heigth {
+                    // break if VY + current_sprite_row is >= 32
+                    if (y_coord + sprite_row) >= DISPLAY_HEIGTH as u8 {
+                        break;
+                    }
+                    // get sprite row data from memory starting at location I
+                    sprite_row_data = self.memory[self.i as usize + sprite_row as usize];
+
+                    // iterate over 8 bits/pixels of current row
+                    for sprite_bit in u8::from(0)..8 {
+                        // break if VX + current_sprite_bit is >= 64
+                        if (x_coord + sprite_bit) >= DISPLAY_WIDTH as u8 {
+                            break;
+                        }
+                        // retrieve current sprite_row_data bit/pixel
+                        // 0x80 = 0x10000000
+                        let current_bit = (0x80 >> sprite_bit) & sprite_row_data;
+                        // get current (x, y) coords in display
+                        let x_y_coord = (x_coord + sprite_bit) as usize
+                            + ((y_coord + sprite_row) as usize * DISPLAY_WIDTH);
+
+                        // if current sprite row bit/pixel is set
+                        if current_bit != 0 {
+                            // if also the pixel in coordinates (x, y) is set
+                            if self.display[x_y_coord] {
+                                // turn off the pixel
+                                self.display[x_y_coord] = false;
+                                // set VF = 1
+                                self.v[0xF] = 1;
+                            } else {
+                                // turn on the pixel
+                                self.display[x_y_coord] = true;
+                            }
+                        }
+                    }
+                }
+
+                // redraw the screen
+                self.draw = true;
 
                 self.pc += 2
             }

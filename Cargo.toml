@@ -3,7 +3,7 @@ name = "rust-chip-8"
 version = "0.1.0"
 authors = ["Riccardo Armando Di Prinzio (ricdip)"]
 edition = "2021"
-description = "A simple Rust implementation of CHIP-8 for fun and learning purposes"
+description = "A Rust implementation of CHIP-8 written for fun and learning purposes"
 readme = "README.md"
 license = "MIT"
 
