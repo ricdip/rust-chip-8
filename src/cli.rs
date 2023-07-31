@@ -7,7 +7,7 @@ use tracing::trace;
 /// cli -f command help
 const ARG_ROM_FILE_HELP: &str = "Path to CHIP-8 ROM file to run";
 
-/// cli -f command value
+/// cli -f command value name
 const ARG_ROM_FILE_VALUE_NAME: &str = "FILE";
 
 /// cli -s command help
@@ -15,6 +15,12 @@ const ARG_STEPPING_HELP: &str = "Enable one step at time execution";
 
 /// cli -r command help
 const ARG_RANDOM_SEED_HELP: &str = "Random seed";
+
+/// cli -r command value name
+const ARG_RANDOM_SEED_VALUE_NAME: &str = "SEED";
+
+/// cli -r command default value
+const ARG_RANDOM_SEED_DEFAULT_VALUE: u64 = 10;
 
 /// cli -q command help
 const ARG_QUIET_HELP: &str = "Enable quiet logging";
@@ -42,7 +48,7 @@ pub struct Cli {
     pub stepping: bool,
 
     /// Random seed
-    #[arg(short, long, help=ARG_RANDOM_SEED_HELP, default_value_t = 10)]
+    #[arg(short, long, help=ARG_RANDOM_SEED_HELP, value_name=ARG_RANDOM_SEED_VALUE_NAME, default_value_t=ARG_RANDOM_SEED_DEFAULT_VALUE)]
     pub random_seed: u64,
 }
 
