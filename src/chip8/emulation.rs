@@ -437,6 +437,105 @@ impl Chip8 {
                 self.pc += 2
             }
 
+            // opcodes with first nibble E
+            0xE000 => {
+                match nn {
+                    // opcode with last byte 9E
+                    0x009E => {
+                        debug!("execute: skip if key corresponding to VX is pressed");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte A1
+                    0x00A1 => {
+                        debug!("execute: skip if key corresponding to VX is not pressed");
+
+                        todo!();
+                    }
+
+                    _ => {
+                        self.panic_illegal_opcode_category(op);
+                    }
+                }
+            }
+
+            // opcodes with first nibble F
+            0xF000 => {
+                match nn {
+                    // opcode with last byte 07
+                    0x0007 => {
+                        debug!("execute: set VX = delay timer");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 15
+                    0x0015 => {
+                        debug!("execute: set delay timer = VX");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 18
+                    0x0018 => {
+                        debug!("execute: set sound timer = VX");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 1E
+                    0x001E => {
+                        debug!("execute: I += VX (VF not affected)");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 0A
+                    0x000A => {
+                        debug!("execute: stop executing instructions and wait for key input");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 29
+                    0x0029 => {
+                        debug!("execute: I = VX");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 33
+                    0x0033 => {
+                        debug!(
+                            "execute: get VX; convert it in 3 decimal digits; store them in memory"
+                        );
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 55
+                    // WARN: ambiguous instruction - instruction changed with SUPER-CHIP-8
+                    0x0055 => {
+                        debug!("execute: store registers to memory");
+
+                        todo!();
+                    }
+
+                    // opcode with last byte 65
+                    // WARN: ambiguous instruction - instruction changed with SUPER-CHIP-8
+                    0x0065 => {
+                        debug!("execute: load registers from memory");
+
+                        todo!();
+                    }
+
+                    _ => {
+                        self.panic_illegal_opcode_category(op);
+                    }
+                }
+            }
+
             // illegal opcode
             _ => {
                 self.panic_illegal_opcode();
