@@ -2,7 +2,7 @@
 
 use crate::chip8::{DISPLAY_HEIGTH, DISPLAY_WIDTH};
 
-use super::{Chip8, MAX_DISPLAY_SIZE};
+use super::Chip8;
 use rand::Rng;
 use tracing::{debug, trace};
 
@@ -66,10 +66,9 @@ impl Chip8 {
                     // clear screen
                     0x00E0 => {
                         debug!("execute: clear screen");
-                        // turn off all the pixels
-                        for i in 0..MAX_DISPLAY_SIZE {
-                            self.display[i] = false;
-                        }
+                        // turn off all the pixels (clear display)
+                        self.clear_display();
+
                         // redraw screen
                         self.draw = true;
 

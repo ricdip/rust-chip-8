@@ -107,6 +107,8 @@ struct Timers {
 }
 
 impl Chip8 {
+    // TODO: use reset function
+    #[allow(dead_code)]
     /// Resets CHIP-8 instance
     fn reset(&mut self) {
         trace!("Chip8::reset: start");
@@ -135,9 +137,7 @@ impl Chip8 {
         self.pc = 0x200;
 
         // clear display
-        for i in 0..MAX_DISPLAY_SIZE {
-            self.display[i] = false;
-        }
+        self.clear_display();
 
         // reset draw flag
         self.draw = false;
@@ -171,6 +171,17 @@ impl Chip8 {
         }
 
         trace!("Chip8::load_fontset: exit");
+    }
+
+    /// Clears CHIP-8 display (set all display bits to 0)
+    fn clear_display(&mut self) {
+        trace!("Chip8::clear_screen: start");
+
+        for i in 0..MAX_DISPLAY_SIZE {
+            self.display[i] = false;
+        }
+
+        trace!("Chip8::clear_screen: exit");
     }
 
     /// Returns a new CHIP-8 instance ready to load a new ROM file
@@ -321,6 +332,7 @@ impl Chip8 {
     /// Function that panics on illegal opcode
     fn panic_illegal_opcode(&self) {
         debug!("chip8 state: {}", self);
+        debug!("chip8 memory dump: {}", self.dump_memory());
         panic!("Illegal opcode: `{}`", self.opcode);
     }
 
@@ -331,6 +343,7 @@ impl Chip8 {
     /// * `category` - The u16 category that is the illegal opcode first nibble
     fn panic_illegal_opcode_category(&self, category: u16) {
         debug!("chip8 state: {}", self);
+        debug!("chip8 memory dump: {}", self.dump_memory());
         panic!(
             "Illegal opcode: `{}` in category `{}`",
             self.opcode, category
