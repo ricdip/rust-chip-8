@@ -70,6 +70,12 @@ user@host:~$ cargo uninstall
 user@host:~$ rust-chip-8 -f roms/IBM_logo.ch8
 ```
 
+## Docs build and open
+
+```bash
+user@host:~$ cargo doc --open
+```
+
 ## References
 
 Some really helpful references that I used:
