@@ -26,6 +26,9 @@ const MAX_STACK_SIZE: usize = 16;
 /// max V size
 const V_SIZE: usize = 16;
 
+/// max keypad size
+const KEYPAD_SIZE: usize = 16;
+
 /// CHIP-8 fontset.
 /// Each font is 2 nibbles (or half-bytes) = 1 bytes = 8 bits
 const CHIP8_FONTSET: [u8; 80] = [
@@ -96,6 +99,10 @@ pub struct Chip8 {
     /// when these registers are set with a value > 0, they
     /// will count down until 0
     timers: Timers,
+
+    /// CHIP-8 has a keypad that contains 16 keys labelled from 0 to F (hex) in a 4x4 grid.
+    /// We can store the current state of the key with only 1 bit (0 or 1) to hold the currently pressed state of each keypad key
+    keypad: [bool; KEYPAD_SIZE],
 }
 
 /// Structure that contains CHIP-8 delay_timer and sound_timer
@@ -157,6 +164,11 @@ impl Chip8 {
         self.timers.delay_timer = 0;
         self.timers.sound_timer = 0;
 
+        // reset keypad
+        for i in 0..KEYPAD_SIZE {
+            self.keypad[i] = false;
+        }
+
         debug!("after reset: {}", self);
         trace!("Chip8::reset: exit");
     }
@@ -204,6 +216,7 @@ impl Chip8 {
                 delay_timer: 0,
                 sound_timer: 0,
             },
+            keypad: [false; KEYPAD_SIZE],
         };
         // load fontset
         chip8.load_fontset();
@@ -327,6 +340,25 @@ impl Chip8 {
         trace!("Chip8::dump_stack: exit");
 
         stack_str
+    }
+
+    /// Returns a String that represents the current state of the CHIP-8 keypad
+    fn dump_keypad(&self) -> String {
+        trace!("Chip8::dump_keypad: start");
+
+        // string representation of display
+        let mut keypad_str = String::from("");
+        for i in 0..KEYPAD_SIZE {
+            // if i reaches the display width, new line
+            if i % DISPLAY_WIDTH == 0 {
+                keypad_str += "\n";
+            }
+            keypad_str += &format!("{}", if self.display[i] { 1 } else { 0 });
+        }
+
+        trace!("Chip8::dump_keypad: exit");
+
+        keypad_str
     }
 
     /// Function that panics on illegal opcode
